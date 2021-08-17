@@ -8,10 +8,6 @@ defmodule AuthorizerTest do
     def say_loud_hello(name) do
       "HELLO #{String.upcase(name)}!!!"
     end
-
-    def say_loud_goodbye(name) do
-      "GOODBYE #{String.upcase(name)}!!!"
-    end
   end
 
   defmodule Greeter do
@@ -25,12 +21,12 @@ defmodule AuthorizerTest do
       "Goodbye #{name}!"
     end
 
-    defpermit(say_loud_hello(claim, name), to: ExcitedGreeter)
-
-    # defpermit shout_goodbye(claim, name), to: ExcitedGreeter, as: :say_loud_goodbye
+    defpermit shout_hello(claim, name) do
+      ExcitedGreeter.say_loud_hello(name)
+    end
   end
 
-  describe "defpermit with do block" do
+  describe "defpermit" do
     test "executes block when permitted" do
       company_id = "company_id"
 
@@ -40,7 +36,8 @@ defmodule AuthorizerTest do
 
       permissions = %{
         say_hello: %{company_id: [company_id]},
-        say_goodbye: %{company_id: [company_id]}
+        say_goodbye: %{company_id: [company_id]},
+        shout_hello: %{company_id: [company_id]}
       }
 
       claim = %Claim{
@@ -52,6 +49,7 @@ defmodule AuthorizerTest do
 
       assert Greeter.say_hello(claim, "Bugs Bunny") == "Hello Bugs Bunny!"
       assert Greeter.say_goodbye(claim, "Elmer") == "Goodbye Elmer!"
+      assert Greeter.shout_hello(claim, "Daffy Duck") == "HELLO DAFFY DUCK!!!"
     end
 
     test "executes block when permitted action is in Claim struct" do
@@ -228,31 +226,6 @@ defmodule AuthorizerTest do
                    fn ->
                      Greeter.say_hello(%{}, "Bugs Bunny")
                    end
-    end
-  end
-
-  describe "defpermit with to: option" do
-    test "executes block when permitted" do
-      company_id = "company_id"
-
-      roles = %{
-        {:company_id, company_id} => :user
-      }
-
-      permissions = %{
-        say_hello: %{company_id: [company_id]},
-        say_goodbye: %{company_id: [company_id]}
-      }
-
-      claim = %Claim{
-        resource_id_key: :company_id,
-        resource_id: company_id,
-        roles: roles,
-        permissions: permissions
-      }
-
-      assert Greeter.say_hello(claim, "Bugs Bunny") == "Hello Bugs Bunny!"
-      assert Greeter.say_goodbye(claim, "Elmer") == "Goodbye Elmer!"
     end
   end
 end
