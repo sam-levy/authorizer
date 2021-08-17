@@ -13,6 +13,8 @@ defmodule AuthorizerTest do
   defmodule Greeter do
     import Authorizer
 
+    defpermit(say_hi(claim), do: "Hi!")
+
     defpermit say_hello(claim, name) do
       "Hello #{name}!"
     end
@@ -35,6 +37,7 @@ defmodule AuthorizerTest do
       }
 
       permissions = %{
+        say_hi: %{company_id: [company_id]},
         say_hello: %{company_id: [company_id]},
         say_goodbye: %{company_id: [company_id]},
         shout_hello: %{company_id: [company_id]}
@@ -47,6 +50,7 @@ defmodule AuthorizerTest do
         permissions: permissions
       }
 
+      assert Greeter.say_hi(claim) == "Hi!"
       assert Greeter.say_hello(claim, "Bugs Bunny") == "Hello Bugs Bunny!"
       assert Greeter.say_goodbye(claim, "Elmer") == "Goodbye Elmer!"
       assert Greeter.shout_hello(claim, "Daffy Duck") == "HELLO DAFFY DUCK!!!"
