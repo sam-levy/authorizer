@@ -48,11 +48,7 @@ defmodule Authorizer do
 
   alias Authorizer.Claim
 
-  def can?(%Claim{action: nil} = claim, action) when is_atom(action) do
-    can?(%{claim | action: action})
-  end
-
-  def can?(%Claim{action: _action} = claim, action) when is_atom(action) do
+  def can?(%Claim{} = claim, action) when is_atom(action) do
     can?(%{claim | action: action})
   end
 
@@ -72,7 +68,7 @@ defmodule Authorizer do
     end
   end
 
-  def has_any_role?(%Claim{} = claim) do
+  defp has_any_role?(%Claim{} = claim) do
     case Map.fetch(claim.roles, {claim.resource_id_key, claim.resource_id}) do
       {:ok, _role} -> true
       _ -> false
