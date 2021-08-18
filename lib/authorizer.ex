@@ -7,11 +7,12 @@ defmodule Authorizer do
       end
 
     quote do
+      import Authorizer
+
       def unquote(call) do
         unquote(claim)
         |> validate_claim()
         |> set_action(unquote(function_name))
-        |> validate_role()
         |> validate_permission()
         |> handle_result(unquote(expr))
       end
@@ -29,21 +30,8 @@ defmodule Authorizer do
 
       def set_action(claim, _function_name), do: claim
 
-      def validate_role(%Authorizer.Claim{} = claim, role \\ :user) do
-        case Map.fetch(claim.roles, {claim.resource_id_key, claim.resource_id}) do
-          {:ok, ^role} -> claim
-          _ -> {:error, :unauthorized}
-        end
-      end
-
       def validate_permission(%Authorizer.Claim{} = claim) do
-        with {:ok, resources} <- Map.fetch(claim.permissions, claim.action),
-             {:ok, resource_ids} <- Map.fetch(resources, claim.resource_id_key),
-             true <- Enum.member?(resource_ids, claim.resource_id) do
-          claim
-        else
-          _ -> {:error, :unauthorized}
-        end
+        if can?(claim), do: claim, else: {:error, :unauthorized}
       end
 
       def validate_permission(err), do: err
@@ -53,10 +41,41 @@ defmodule Authorizer do
 
       defoverridable validate_claim: 1,
                      set_action: 2,
-                     validate_role: 1,
-                     validate_role: 2,
                      validate_permission: 1,
                      handle_result: 2
+    end
+  end
+
+  alias Authorizer.Claim
+
+  def can?(%Claim{action: nil} = claim, action) when is_atom(action) do
+    can?(%{claim | action: action})
+  end
+
+  def can?(%Claim{action: _action} = claim, action) when is_atom(action) do
+    can?(%{claim | action: action})
+  end
+
+  def can?(%Claim{action: nil}) do
+    raise ArgumentError,
+          "The action should be passed as second argument when is not present in %Authorizer.Claim{} struc"
+  end
+
+  def can?(%Claim{action: action} = claim) when is_atom(action) do
+    with true <- has_any_role?(claim),
+         {:ok, resources} <- Map.fetch(claim.permissions, claim.action),
+         {:ok, resource_ids} <- Map.fetch(resources, claim.resource_id_key),
+         true <- Enum.member?(resource_ids, claim.resource_id) do
+      true
+    else
+      _ -> false
+    end
+  end
+
+  def has_any_role?(%Claim{} = claim) do
+    case Map.fetch(claim.roles, {claim.resource_id_key, claim.resource_id}) do
+      {:ok, _role} -> true
+      _ -> false
     end
   end
 end

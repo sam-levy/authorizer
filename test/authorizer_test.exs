@@ -232,4 +232,139 @@ defmodule AuthorizerTest do
                    end
     end
   end
+
+  describe "can?" do
+    test "when action is permitted" do
+      company_id = "company_id"
+
+      roles = %{
+        {:company_id, company_id} => :user
+      }
+
+      permissions = %{
+        say_hello: %{company_id: [company_id]}
+      }
+
+      claim = %Claim{
+        resource_id_key: :company_id,
+        resource_id: company_id,
+        roles: roles,
+        permissions: permissions
+      }
+
+      assert Authorizer.can?(claim, :say_hello)
+    end
+
+    test "when action in claim is permitted" do
+      company_id = "company_id"
+
+      roles = %{
+        {:company_id, company_id} => :user
+      }
+
+      permissions = %{
+        say_hello: %{company_id: [company_id]}
+      }
+
+      claim = %Claim{
+        action: :say_hello,
+        resource_id_key: :company_id,
+        resource_id: company_id,
+        roles: roles,
+        permissions: permissions
+      }
+
+      assert Authorizer.can?(claim)
+    end
+
+    test "when action is not permitted" do
+      company_id = "company_id"
+
+      roles = %{
+        {:company_id, company_id} => :user
+      }
+
+      permissions = %{
+        say_hello: %{company_id: [company_id]}
+      }
+
+      claim = %Claim{
+        resource_id_key: :company_id,
+        resource_id: company_id,
+        roles: roles,
+        permissions: permissions
+      }
+
+      refute Authorizer.can?(claim, :say_goodbye)
+    end
+
+    test "when action in claim is not permitted" do
+      company_id = "company_id"
+
+      roles = %{
+        {:company_id, company_id} => :user
+      }
+
+      permissions = %{
+        say_hello: %{company_id: [company_id]}
+      }
+
+      claim = %Claim{
+        action: :say_goodbye,
+        resource_id_key: :company_id,
+        resource_id: company_id,
+        roles: roles,
+        permissions: permissions
+      }
+
+      refute Authorizer.can?(claim)
+    end
+
+    test "when claim has no action" do
+      company_id = "company_id"
+
+      roles = %{
+        {:company_id, company_id} => :user
+      }
+
+      permissions = %{
+        say_hello: %{company_id: [company_id]}
+      }
+
+      claim = %Claim{
+        resource_id_key: :company_id,
+        resource_id: company_id,
+        roles: roles,
+        permissions: permissions
+      }
+
+      assert_raise ArgumentError,
+                   "The action should be passed as second argument when is not present in %Authorizer.Claim{} struc",
+                   fn ->
+                     Authorizer.can?(claim)
+                   end
+    end
+
+    test "action in argument has precedence over action in claim" do
+      company_id = "company_id"
+
+      roles = %{
+        {:company_id, company_id} => :user
+      }
+
+      permissions = %{
+        say_hello: %{company_id: [company_id]}
+      }
+
+      claim = %Claim{
+        action: :say_hello,
+        resource_id_key: :company_id,
+        resource_id: company_id,
+        roles: roles,
+        permissions: permissions
+      }
+
+      refute Authorizer.can?(claim, :say_goodbye)
+    end
+  end
 end

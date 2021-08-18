@@ -9,7 +9,7 @@ defmodule Greeter do
     hello(name)
   end
 
-  # defpermit say_goodbye(claim, title, name) do
-  #   IO.puts("Good bye #{title} #{name}")
-  # end
+  defpermit say_goodbye(claim, title, name) do
+    IO.puts("Good bye #{title} #{name}")
+  end
 end
