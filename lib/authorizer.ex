@@ -54,7 +54,7 @@ defmodule Authorizer do
 
   def can?(%Claim{action: nil}) do
     raise ArgumentError,
-          "The action should be passed as second argument when is not present in %Authorizer.Claim{} struc"
+          "The action should be passed as second argument when is not present in the %Authorizer.Claim{} struct"
   end
 
   def can?(%Claim{action: action} = claim) when is_atom(action) do

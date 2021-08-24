@@ -339,7 +339,7 @@ defmodule AuthorizerTest do
       }
 
       assert_raise ArgumentError,
-                   "The action should be passed as second argument when is not present in %Authorizer.Claim{} struc",
+                   "The action should be passed as second argument when is not present in the %Authorizer.Claim{} struct",
                    fn ->
                      Authorizer.can?(claim)
                    end
